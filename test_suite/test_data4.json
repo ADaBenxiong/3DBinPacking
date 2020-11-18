@@ -1,0 +1,78 @@
+{
+	"tradeId": "919822058",
+	"orderList": [
+		{
+			"orderCode": "0",
+			"unloadingSequence": 0,
+			"goodList": [
+				{
+					"materialCode": "CG0LLW003",
+					"qty": 30,
+					"length": 750.0,
+					"width": 680.0,
+					"height": 300.0,
+					"setCode": "",
+					"weight": 0.4692,
+					"restrictionList": [
+						{
+							"flag": "1",
+							"isBear": true,
+							"bearLevel": 9,
+							"isStack": true,
+							"stackLevel": 3
+						},
+						{
+							"flag": "2",
+							"isBear": true,
+							"bearLevel": 9,
+							"isStack": true,
+							"stackLevel": 3
+						}
+					]
+				}
+			]
+		},
+		{
+			"orderCode": "1",
+			"unloadingSequence": 1,
+			"goodList": [
+				{
+					"materialCode": "CG0LLW003",
+					"qty": 30,
+					"length": 750.0,
+					"width": 680.0,
+					"height": 300.0,
+					"setCode": "",
+					"weight": 0.4692,
+					"restrictionList": [
+						{
+							"flag": "1",
+							"isBear": true,
+							"bearLevel": 9,
+							"isStack": true,
+							"stackLevel": 3
+						},
+						{
+							"flag": "2",
+							"isBear": true,
+							"bearLevel": 9,
+							"isStack": true,
+							"stackLevel": 3
+						}
+					]
+				}
+			]
+		}
+	],
+	"vehicleModelList": [
+		{
+			"modelCode": "B0001",
+			"qty": 24,
+			"cubic": 9.0848,
+			"weight": 1250.0,
+			"length": 3200.0,
+			"width": 1700.0,
+			"height": 1670.0
+		}
+	]
+}

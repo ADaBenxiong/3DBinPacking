@@ -1,0 +1,64 @@
+{
+  "tradeId": "5245374938",
+  "orderList": [
+    {
+      "orderCode": "123456",
+      "unloadingSequence": 1,
+      "goodList": [
+        {
+          "materialCode": "s",
+          "setCode": "A",
+          "qty": 10,
+          "length": 340,
+          "width": 300,
+          "height": 480,
+          "weight": 0,
+          "restrictionList": [
+            {
+              "flag": "1",
+              "isBear": true,
+              "bearLevel": 1,
+              "isStack": false,
+              "stackLevel": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "orderCode": "8200000852",
+      "unloadingSequence": 2,
+      "goodList": [
+        {
+          "materialCode": "BQ000D002",
+          "setCode": "A",
+          "qty": 10,
+          "length": 300,
+          "width": 500,
+          "height": 600,
+          "weight": 30,
+          "restrictionList": [
+            {
+              "flag": "1",
+              "isBear": true,
+              "bearLevel": 1,
+              "isStack": false,
+              "stackLevel": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "vehicleModelList": [
+    {
+      "modelCode": "40HQ",
+      "qty": 10,
+      "cubic": "20",
+      "weight": 30,
+      "length": 5000,
+      "width": 5350,
+      "height": 5380
+    }
+  ]
+}

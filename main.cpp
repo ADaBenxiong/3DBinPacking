@@ -5,7 +5,7 @@
 //问题3：多箱问题对于如何选择集装箱并未做出考虑，需要通过经济效益判断如何选箱
 //问题4：给出的真实数据存在误差，有问题（高度过高的冰箱，以及装箱率问题）
 
-#include <jni.h>
+// #include <jni.h>
 #include"Point.h"
 #include"Cargo.h"
 #include"Chromosome.h"
@@ -17,17 +17,20 @@
 #include <string>
 #include <set>
 #include <cstdint>
+#include<ctime>
 
 template <typename Container>
-void delete_vector(const Container& container, int size) {
-	for (int i = 0; i < size; ++i)
-		delete container[i];
+void delete_vector(const Container& container, int size)
+{
+    for (int i = 0; i < size; ++i)
+        delete container[i];
 }
 
 template <typename Container>
-void delete_vector(const Container& container) {
-	for (auto ptr : container)
-		delete ptr;
+void delete_vector(const Container& container)
+{
+    for (auto ptr : container)
+        delete ptr;
 }
 
 using namespace std;
@@ -59,7 +62,7 @@ string global_tradeId;
 Bin* bin[maxnbin_]; //集装箱的数量
 Cargo *ca[maxn_];   //货物的数量
 //double SUM[maxnbin_];   //每个车的装箱率
-int LengthOfPacking = 100;
+//int LengthOfPacking = 100;
 /*
 void init()
 {
@@ -85,7 +88,7 @@ vector<EMSpace>::iterator ite;
 vector<EMSpace>::iterator ite2;
 
 //================================================遗传算法函数以及变量
-const int MAXN = 20;    //表示遗传算法每一代种群的数量
+const int MAXN = 1;    //表示遗传算法每一代种群的数量
 const int EV = 0; //表示遗传算法进化的代数
 const double SaProbability = 0.100; //优秀染色体保留的概率
 const double OvProbability = 0.600; //交叉的概率
@@ -108,7 +111,7 @@ void Init()
     vecc.clear();
     vece.clear();
     vece2.clear();
-	allocated_chrosomes.clear();
+    allocated_chrosomes.clear();
 }
 
 void Initialize();  //随机初始化种群， 得到第一代个体
@@ -188,21 +191,55 @@ double Chromosome::Fitness(vector<Cargo*> vec, Bin* b)        //染色体的适应值计
     int numk = 0;   //表示集装箱的编号
     for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
     {
-        //cout << (*it)->GetLength() << " " << (*it)->GetWidth() << " " << (*it)->GetHigh() << endl;
+        //// << (*it)->GetLength() << " " << (*it)->GetWidth() << " " << (*it)->GetHigh() << endl;
         // EMSpace ems_select = DFTRC_2(vec, *it, bin[numk]);   //选择用于装箱的空间
-		EMSpace ems_select(ems);
+        EMSpace ems_select(ems);
         bool valid = DFTRC_2(vec, *it, bin[numk], &ems_select);   //选择用于装箱的空间
-		if (!valid)
-			return 0;
+        if (!valid)
+            return 0;
 
-        //cout << ems_select.GetLength() << " " << ems_select.GetWidth() << " " << ems_select.GetHigh() << endl;
+        //// << ems_select.GetLength() << " " << ems_select.GetWidth() << " " << ems_select.GetHigh() << endl;
         numk = (*it)->numofpack;
-        //cout << numk;
+        //// << numk;
         int flag = CargoOrientation(vec, *it, ems_select); //返回即为箱子的方向
-        //cout << flag << endl;
+        //// << flag << endl;
         CargoPacking(*it, ems_select, flag);  //进行装箱
         StateUpdate(*it, flag);
     }
+
+    {
+        // keep suite?
+
+        map<string, map<int, map<string, int>>> table;
+
+        for (Cargo* cargo : vec)
+        {
+            const string& set_code = cargo->set_code;
+            if (set_code != "")
+            {
+                table[set_code][cargo->numofpack][cargo->materialCode]++;
+            }
+        }
+
+        for (auto& same_set : table)
+        {
+            for (auto&& same_bin : same_set.second)
+            {
+                const map<string, int>& cargo_amounts = same_bin.second;
+                int amount = cargo_amounts.begin()->second;
+
+                for (auto&& pair : cargo_amounts)
+                {
+                    if (pair.second != amount)
+                    {
+                        fitness = 0;
+                        return 0;
+                    }
+                }
+            }
+        }
+    }
+
     vece.clear();//装箱空间最后清除
     int max_x = 0, max_y = 0, max_z = 0;
 
@@ -220,13 +257,15 @@ double Chromosome::Fitness(vector<Cargo*> vec, Bin* b)        //染色体的适应值计
     value_k = 1.0 / value_k;
     fitness = value_k;
     sort(vec.begin(), vec.end(), ComparePacking2);
+
+
     return value_k;
 }
 
 bool Chromosome::PackingOf(vector<Cargo*> vec)
 {
 
-    printf("装箱显示\n");
+    // printf("装箱显示\n");
     //集装箱初始信息维护
     vece.clear();
     EMSpace ems(bin[0]->GetPoint1(), bin[0]->GetPoint2());
@@ -235,7 +274,7 @@ bool Chromosome::PackingOf(vector<Cargo*> vec)
     int k = 0;  //表示染色体基因值序列
     for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
     {
-		int ding = (*it)->ding;
+        int ding = (*it)->ding;
         (*it)->SetBPS(ch[k] + ding);
         (*it)->SetVBO(ch[maxn + k]);
         k++;
@@ -246,21 +285,21 @@ bool Chromosome::PackingOf(vector<Cargo*> vec)
     for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
     {
         // EMSpace ems_select = DFTRC_2(vec, *it, bin[numk]);   //选择用于装箱的空间
-		EMSpace ems_select(ems);
+        EMSpace ems_select(ems);
         bool valid = DFTRC_2(vec, *it, bin[numk], &ems_select);   //选择用于装箱的空间
-		if (!valid)
-			return false;
+        if (!valid)
+            return false;
 
         numk = (*it)->numofpack;
-        cout << numk;
+        // // << numk;
         int flag = CargoOrientation(vec, *it, ems_select); //返回即为箱子的方向
 
         (*it)->flag = flag;
-        if((*it)->flag == 2)
-            (*it)->flag = 3;
-        else if((*it)->flag == 3)
-            (*it)->flag = 2;
-        //cout << flag << endl;
+        // if((*it)->flag == 2)
+        //     (*it)->flag = 3;
+        // else if((*it)->flag == 3)
+        //     (*it)->flag = 2;
+        //// << flag << endl;
         CargoPacking(*it, ems_select, flag);  //进行装箱
         StateUpdate(*it, flag);
         //sum_all += (*it)->GetLength() * (*it)->GetWidth() * (*it)->GetHigh();
@@ -268,7 +307,7 @@ bool Chromosome::PackingOf(vector<Cargo*> vec)
     vece.clear();//装箱空间最后清除
     //将装箱的顺序和位置返回
 
-    sort(vec.begin(), vec.end(), ComparePacking2);
+    sort(vec.begin(), vec.end(), ComparePacking1);
 
     double SUM[maxnbin_];
     memset(SUM, 0, sizeof(SUM));
@@ -279,11 +318,11 @@ bool Chromosome::PackingOf(vector<Cargo*> vec)
     }
     for(int i=0; i<=numk; i++)
     {
-        cout << "集装箱" << i << "装箱率：" << SUM[i] * 1.0 / (bin[i]->GetLength() * bin[i]->GetWidth() * bin[i]->GetHigh()) * 1.0 << endl;
+        cerr << "packing rate of car " << i << " = " << SUM[i] * 1.0 / (bin[i]->GetLength() * bin[i]->GetWidth() * bin[i]->GetHigh()) * 1.0 << endl;
     }
     // ShowCargo(vec);
 
-	return true;
+    return true;
 }
 //=======================================================遗传算法函数的实现
 
@@ -300,19 +339,19 @@ void Initialize()   //随机初始化种群， 得到第一代种群
             double p = (rand() % 1000)/ 1000.0;
             ch_variable[j] = p;
         }/*
-        for(int j = 0; j<maxn * 2; j++)
-        {
-            cout << ch_variable[j] << " ";
-        }
-        cout << endl;
+        // for(int j = 0; j<maxn * 2; j++)
+        // {
+        //     // << ch_variable[j] << " ";
+        // }
+        // // << endl;
         */
         chrom[i] = new Chromosome(ch_variable);
-		allocated_chrosomes.push_back(chrom[i]);
+        allocated_chrosomes.push_back(chrom[i]);
         chrom[i]->SetId(ID);
         ID++;
         vec_now.push_back(chrom[i]);
     }
-    cout << "染色体容器大小:" << vec_now.size() << endl;
+    // // << "染色体容器大小:" << vec_now.size() << endl;
 }
 void CaculaFitness()    //计算适应值概率每一代所有染色体都被计算
 {
@@ -334,12 +373,12 @@ void CaculaFitness()    //计算适应值概率每一代所有染色体都被计算
     {
         double m = value[k] * 1.0/ sum * 1.0;
         (*it)->SetReFitness(m);     //概率越大越好
-        //cout << 1.0 / (*it)->GetFitness() * 1.0 << endl;
+        //// << 1.0 / (*it)->GetFitness() * 1.0 << endl;
         max_ = max((*it)->GetFitness(), max_);                                                                 //用于调试显示需要迭代足够多的次数
         k++;
     }
     SUM++;
-    cout << SUM << " " << max_ << endl;
+    // // << SUM << " " << max_ << endl;
 }
 bool CompareChromosome(Chromosome* x, Chromosome* y)    //染色体排序算法
 {
@@ -363,7 +402,7 @@ void Selecting()
         {
             vec_next.push_back(*it);        //将精英染色体选择到下一代中
             vec_elite.push_back(*it);
-            //cout << "精英" << (*it)->GetReFitness() << endl << endl;
+            //// << "精英" << (*it)->GetReFitness() << endl << endl;
         }
         else
             break;
@@ -375,14 +414,14 @@ void Selecting()
     {
         sum = sum + (*it)->GetReFitness();
         (*it)->SetSumFitness(sum);
-        //cout <<(*it)->GetSumFitness() << endl;
+        //// <<(*it)->GetSumFitness() << endl;
     }
-    //cout << vec_next.size() << endl;
+    //// << vec_next.size() << endl;
 }
 //杂交产生染色体
 void Crossing()
 {
-    //cout << "Test2" << endl;
+    //// << "Test2" << endl;
     srand(time(NULL));
     int Length = vec_elite.size();    //精英染色体的个数
     for(int j = 0; j < (int)(vec_now.size() * OvProbability); j++)  //杂交的过程
@@ -414,7 +453,7 @@ void Crossing()
         }
         else
         {
-            //cout << chrom1->GetReFitness() << " " << chrom2->GetReFitness() << endl;
+            //// << chrom1->GetReFitness() << " " << chrom2->GetReFitness() << endl;
             double ans[maxn * 2];
             for(int i=0; i<maxn * 2; i++)
             {
@@ -429,19 +468,19 @@ void Crossing()
                 }
             }
             Chromosome* chrom_ans = new Chromosome(ans);
-			allocated_chrosomes.push_back(chrom_ans);
+            allocated_chrosomes.push_back(chrom_ans);
             vec_next.push_back(chrom_ans);
         }
     }
-    //cout << vec_next.size() << endl;
+    //// << vec_next.size() << endl;
 }
 //变异产生染色体
 void Variating()
 {
-    //cout << "Test3" << endl;
+    //// << "Test3" << endl;
     srand(time(NULL));
     int Length = vec_now.size() - vec_next.size();  //变异染色体的数量
-    //cout << Length << endl;
+    //// << Length << endl;
     for(int i=0; i<Length; i++)
     {
         Chromosome* chrom = vec_now.front();   //选择变异的染色体
@@ -468,7 +507,7 @@ void Variating()
             }
         }
         Chromosome* chrom_ans = new Chromosome(ans);
-		allocated_chrosomes.push_back(chrom_ans);
+        allocated_chrosomes.push_back(chrom_ans);
         vec_next.push_back(chrom_ans);
     }
     vec_now.clear();
@@ -481,8 +520,9 @@ void Variating()
         vec_now.push_back(*it);
     }
     vec_next.clear();
-    //cout << vec_now.size() << endl;
+    //// << vec_now.size() << endl;
 }
+
 Chromosome* GeneticAlgorithm() //遗传算法
 {
     Initialize();   //初始化种群，随机生成第一代个体
@@ -501,7 +541,7 @@ Chromosome* GeneticAlgorithm() //遗传算法
     Chromosome* ch = nullptr; //最终被选择的染色体
     for(vector<Chromosome*>::iterator it = vec_now.begin(); it != vec_now.end(); it++)
     {
-        //cout << (*it)->GetFitness() << endl;
+        //// << (*it)->GetFitness() << endl;
         if((*it)->GetReFitness() > max_)
         {
             max_ = (*it)->GetReFitness();
@@ -514,8 +554,8 @@ Chromosome* GeneticAlgorithm() //遗传算法
 //将箱子两点显示
 void ShowPoint(Point p1, Point p2)
 {
-    cout << p1.GetPointX() << " " << p1.GetPointY() << " " << p1.GetPointZ() << endl;
-    cout << p2.GetPointX() << " " << p2.GetPointY() << " " << p2.GetPointZ() << endl;
+    // // << p1.GetPointX() << " " << p1.GetPointY() << " " << p1.GetPointZ() << endl;
+    // // << p2.GetPointX() << " " << p2.GetPointY() << " " << p2.GetPointZ() << endl;
 }
 int Compare(Point p1, Point p2)
 {
@@ -539,13 +579,13 @@ int Compare(Point p1, Point p2)
 // EMSpace DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b)
 bool DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b, EMSpace* space)
 {
-    //cout << endl;
+    //// << endl;
     int k = b->GetNum();    // 箱子编号
     double maxdist = -1;
     vector<EMSpace>::iterator it_ems = vece.end();
     for(ite = vece.begin(); ite != vece.end(); ite++)
     {
-        //cout <<endl;
+        //// <<endl;
         int x = (ite->GetPoint1()).GetPointX();
         int y = (ite->GetPoint1()).GetPointY();
         int z = (ite->GetPoint1()).GetPointZ();
@@ -553,7 +593,396 @@ bool DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b, EMSpace* space)
         //if(ite->GetLength() >= c->GetLength() && ite->GetWidth() >= c->GetWidth() && ite->GetHigh() >= c->GetHigh())
         if((c->node[0]).f == 1 &&c->weight <= ite->weight && ite->GetLength() >= c->GetLength() && ite->GetWidth() >= c->GetWidth() && ite->GetHigh() >= c->GetHigh() && (c->node[0]).l >= ite->level && ite->yes == 1)
         {
+            if (((ite->cargo_code == c->materialCode) && (ite->layer > 0)) || ((ite->cargo_code != c->materialCode) && (ite->max_weight > c->weight)))
+            {
+                int k = 0;  //若k = 5表示可以放得下
+                Point point1(x, y, z);
+                Point point2(x + c->GetLength(), y + c->GetWidth(), z + c->GetHigh());  //装箱的两点
+                if(z == 0)
+                {
+                    k = 5;
+                }
+                else    //堆积问题
+                {
+                    Point *point[5];
+                    point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
+                    point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
+
+                    for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
+                    {
+                        if(*it == c)
+                        {
+                            break;
+                        }
+                        Point point1_ = (*it)->GetPoint1();
+                        Point point2_ = (*it)->GetPoint2();
+                        for(int i = 0; i < 5; i++)
+                        {
+                            if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
+                            {
+                                if(a[i] == 0)
+                                {
+                                    a[i] = 1;
+                                    k++;
+                                }
+                            }
+                        }
+                        if(k == 5)
+                            break;
+                    }
+
+                    delete_vector(point);
+                }
+
+                double dist =pow((b->GetLength() - x - c->GetLength())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetWidth())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetHigh())*1.0, 2.0);
+
+                if(dist > maxdist && k == 5)
+                {
+                    maxdist = dist;
+                    it_ems = ite;
+                    //// << "        1" << endl;
+                }
+            }
+        }
+
+        //方向2
+        //if(ite->GetLength() >= c->GetLength() && ite->GetWidth() >= c->GetHigh() && ite->GetHigh() >= c->GetWidth())
+        if((c->node[1]).f == 1 &&c->weight <= ite->weight&& ite->GetLength() >= c->GetLength() && ite->GetWidth() >= c->GetHigh() && ite->GetHigh() >= c->GetWidth() && (c->node[1]).l >= ite->level && ite->yes == 1)
+        {
+            if (((ite->cargo_code == c->materialCode) && (ite->layer > 0)) || (ite->cargo_code != c->materialCode) && (ite->max_weight > c->weight))
+            {
+                int k = 0;  //如k = 5表示可以放得下
+                Point point1(x, y, z);
+                Point point2(x + c->GetLength(), y + c->GetHigh(), z + c->GetWidth());  //装箱的两点
+                if(z == 0)
+                {
+                    k = 5;
+                }
+                else    //堆积问题
+                {
+                    Point *point[5];
+                    point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
+                    //// << point[0]->GetPointX() << " " << point[0]->GetPointY() << " " << point[0]->GetPointZ() << endl;
+                    point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
+
+                    for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
+                    {
+                        if(*it == c)
+                        {
+                            break;
+                        }
+                        Point point1_ = (*it)->GetPoint1();
+                        Point point2_ = (*it)->GetPoint2();
+                        for(int i = 0; i < 5; i++)
+                        {
+                            if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
+                            {
+                                if(a[i] == 0)
+                                {
+                                    a[i] = 1;
+                                    k++;
+                                }
+                            }
+                        }
+                        if(k == 5)
+                            break;
+                    }
+
+                    delete_vector(point);
+                }
+                double dist =pow((b->GetLength() - x - c->GetLength())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetHigh())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetWidth())*1.0, 2.0);
+                if(dist > maxdist && k == 5)
+                {
+                    maxdist = dist;
+                    it_ems = ite;
+                    //// << "        2" << endl;
+                }
+            }
+        }
+
+        //方向3
+        //if(ite->GetLength() >= c->GetWidth() && ite->GetWidth() >= c->GetLength() && ite->GetHigh() >= c->GetHigh())
+        if((c->node[2]).f == 1  &&c->weight <= ite->weight && ite->GetLength() >= c->GetWidth() && ite->GetWidth() >= c->GetLength() && ite->GetHigh() >= c->GetHigh() && (c->node[2]).l >= ite->level && ite->yes == 1)
+        {
+            if (((ite->cargo_code == c->materialCode) && (ite->layer > 0)) || (ite->cargo_code != c->materialCode) && (ite->max_weight > c->weight))
+            {
+                int k = 0;  //如k = 5表示可以放得下
+                Point point1(x, y, z);
+                Point point2(x + c->GetWidth(), y + c->GetLength(), z + c->GetHigh());  //装箱的两点
+                if(z == 0)
+                {
+                    k = 5;
+                }
+                else    //堆积问题
+                {
+                    Point *point[5];
+                    point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
+                    point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
+
+                    for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
+                    {
+                        if(*it == c)
+                        {
+                            break;
+                        }
+                        Point point1_ = (*it)->GetPoint1();
+                        Point point2_ = (*it)->GetPoint2();
+                        for(int i = 0; i < 5; i++)
+                        {
+                            if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
+                            {
+                                if(a[i] == 0)
+                                {
+                                    a[i] = 1;
+                                    k++;
+                                }
+                            }
+                        }
+                        if(k == 5)
+                            break;
+                    }
+
+                    delete_vector(point);
+                }
+                double dist =pow((b->GetLength() - x - c->GetWidth())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetLength())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetHigh())*1.0, 2.0);
+                if(dist > maxdist && k == 5)
+                {
+                    maxdist = dist;
+                    it_ems = ite;
+                    //// << "        3" << endl;
+                }
+            }
+        }
+        //方向4
+        //if(ite->GetLength() >= c->GetWidth() && ite->GetWidth() >= c->GetHigh() && ite->GetHigh() >= c->GetLength())
+        if((c->node[3]).f == 1 &&c->weight <= ite->weight && ite->GetLength() >= c->GetWidth() && ite->GetWidth() >= c->GetHigh() && ite->GetHigh() >= c->GetLength() && (c->node[3]).l >= ite->level && ite->yes == 1)
+        {
+            if (((ite->cargo_code == c->materialCode) && (ite->layer > 0)) || (ite->cargo_code != c->materialCode) && (ite->max_weight > c->weight))
+            {
+                int k = 0;  //如k = 5表示可以放得下
+                Point point1(x, y, z);
+                Point point2(x + c->GetWidth(), y + c->GetHigh(), z + c->GetLength());  //装箱的两点
+                if(z == 0)
+                {
+                    k = 5;
+                }
+                else    //堆积问题
+                {
+                    Point *point[5];
+                    point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
+                    point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
+
+                    for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
+                    {
+                        if(*it == c)
+                        {
+                            break;
+                        }
+                        Point point1_ = (*it)->GetPoint1();
+                        Point point2_ = (*it)->GetPoint2();
+                        for(int i = 0; i < 5; i++)
+                        {
+                            if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
+                            {
+                                if(a[i] == 0)
+                                {
+                                    a[i] = 1;
+                                    k++;
+                                }
+                            }
+                        }
+                        if(k == 5)
+                            break;
+                    }
+
+                    delete_vector(point);
+                }
+                double dist =pow((b->GetLength() - x - c->GetWidth())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetHigh())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetLength())*1.0, 2.0);
+                if(dist > maxdist && k == 5)
+                {
+                    maxdist = dist;
+                    it_ems = ite;
+                    //// << "        4" << endl;
+                }
+            }
+        }
+        //方向5
+        //if(ite->GetLength() >= c->GetHigh() && ite->GetWidth() >= c->GetLength() && ite->GetHigh() >= c->GetWidth())
+        if((c->node[4]).f == 1 &&c->weight <= ite->weight && ite->GetLength() >= c->GetHigh() && ite->GetWidth() >= c->GetLength() && ite->GetHigh() >= c->GetWidth() && (c->node[4]).l >= ite->level && ite->yes == 1)
+        {
+            if (((ite->cargo_code == c->materialCode) && (ite->layer > 0)) || (ite->cargo_code != c->materialCode) && (ite->max_weight > c->weight))
+            {
+                int k = 0;  //如k = 5表示可以放得下
+                Point point1(x, y, z);
+                Point point2(x + c->GetHigh(), y + c->GetLength(), z + c->GetWidth());  //装箱的两点
+                if(z == 0)
+                {
+                    k = 5;
+                }
+                else    //堆积问题
+                {
+                    Point *point[5];
+                    point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
+                    point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
+
+                    for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
+                    {
+                        if(*it == c)
+                        {
+                            break;
+                        }
+                        Point point1_ = (*it)->GetPoint1();
+                        Point point2_ = (*it)->GetPoint2();
+                        for(int i = 0; i < 5; i++)
+                        {
+                            if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
+                            {
+                                if(a[i] == 0)
+                                {
+                                    a[i] = 1;
+                                    k++;
+                                }
+                            }
+                        }
+                        if(k == 5)
+                            break;
+                    }
+
+                    delete_vector(point);
+                }
+                double dist =pow((b->GetLength() - x - c->GetHigh())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetLength())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetWidth())*1.0, 2.0);
+                if(dist > maxdist && k == 5)
+                {
+                    maxdist = dist;
+                    it_ems = ite;
+                }
+            }
+        }
+        //方向6
+        //if(ite->GetLength() >= c->GetHigh() && ite->GetWidth() >= c->GetWidth() && ite->GetHigh() >= c->GetLength())
+        if((c->node[5]).f == 1 &&c->weight <= ite->weight && ite->GetLength() >= c->GetHigh() && ite->GetWidth() >= c->GetWidth() && ite->GetHigh() >= c->GetLength() && (c->node[5]).l >= ite->level && ite->yes == 1)
+        {
+            if (((ite->cargo_code == c->materialCode) && (ite->layer > 0)) || (ite->cargo_code != c->materialCode) && (ite->max_weight > c->weight))
+            {
+                int k = 0;  //如k = 5表示可以放得下
+                Point point1(x, y, z);
+                Point point2(x + c->GetHigh(), y + c->GetWidth(), z + c->GetLength());  //装箱的两点
+                if(z == 0)
+                {
+                    k = 5;
+                }
+                else    //堆积问题
+                {
+                    Point *point[5];
+                    point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
+                    point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
+                    point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
+                    int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
+
+                    for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
+                    {
+                        if(*it == c)
+                        {
+                            break;
+                        }
+                        Point point1_ = (*it)->GetPoint1();
+                        Point point2_ = (*it)->GetPoint2();
+                        for(int i = 0; i < 5; i++)
+                        {
+                            if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
+                            {
+                                if(a[i] == 0)
+                                {
+                                    a[i] = 1;
+                                    k++;
+                                }
+                            }
+                        }
+                        if(k == 5)
+                            break;
+                    }
+
+                    delete_vector(point);
+                }
+                double dist =pow((b->GetLength() - x - c->GetHigh())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetWidth())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetLength())*1.0, 2.0);
+                if(dist > maxdist && k == 5)
+                {
+                    maxdist = dist;
+                    it_ems = ite;
+                }
+            }
+        }
+    }
+
+    if(it_ems == vece.end())
+    {
+        k++;
+
+        if(!bin[k])
+            return false;
+
+        vece.clear();
+        Point P1 = bin[k]->GetPoint1();
+        Point P2 = bin[k]->GetPoint2();
+        EMSpace ems_(P1, P2);
+        vece.push_back(ems_);
+        c->numofpack = bin[k]->GetNum();
+        *space = ems_;
+        // return ems_;
+        return true;
+    }
+    else
+    {
+        c->numofpack = b->GetNum();
+        // return *it_ems; //返回用于装箱的空间
+        *space = *it_ems;
+        return true;
+    }
+}
+
+//确定装箱的方向
+int CargoOrientation(vector<Cargo*>vec, Cargo *c, EMSpace ems)
+{
+    c->Setnum(0);
+    for(int j=0; j<6; j++)
+    {
+        c->SetOri(j, 0);
+    }
+    //// << (c->node[0]).f << " " << c->weight << " " << ems.weight << " " << (c->node[0]).l << " " << ems.level << " " << ems.yes << endl;
+    //方向1
+    //if(ems.GetLength() >= c->GetLength() && ems.GetWidth() >= c->GetWidth() && ems.GetHigh() >= c->GetHigh())
+    if((c->node[0]).f == 1&& c->weight <= ems.weight && (c->node[0]).l >= ems.level && ems.yes == 1 && ems.GetLength() >= c->GetLength() && ems.GetWidth() >= c->GetWidth() && ems.GetHigh() >= c->GetHigh())
+    {
+        if (((ems.cargo_code == c->materialCode) && (ems.layer > 0)) || (ems.cargo_code != c->materialCode) && (ems.max_weight > c->weight))
+        {
+            //// << "yes" << endl;
             int k = 0;  //若k = 5表示可以放得下
+            int x = (ems.GetPoint1()).GetPointX();
+            int y = (ems.GetPoint1()).GetPointY();
+            int z = (ems.GetPoint1()).GetPointZ();
+
             Point point1(x, y, z);
             Point point2(x + c->GetLength(), y + c->GetWidth(), z + c->GetHigh());  //装箱的两点
             if(z == 0)
@@ -593,24 +1022,27 @@ bool DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b, EMSpace* space)
                         break;
                 }
 
-				delete_vector(point);
             }
-
-            double dist =pow((b->GetLength() - x - c->GetLength())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetWidth())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetHigh())*1.0, 2.0);
-
-            if(dist > maxdist && k == 5)
+            if(k == 5)
             {
-                maxdist = dist;
-                it_ems = ite;
-                //cout << "        1" << endl;
+                int k_ = c->Getnum();   //可放箱子个数选择
+                c->SetOri(k_, 1);
+                c->Setnum(k_ + 1);
             }
         }
+    }
 
-        //方向2
-        //if(ite->GetLength() >= c->GetLength() && ite->GetWidth() >= c->GetHigh() && ite->GetHigh() >= c->GetWidth())
-        if((c->node[1]).f == 1 &&c->weight <= ite->weight&& ite->GetLength() >= c->GetLength() && ite->GetWidth() >= c->GetHigh() && ite->GetHigh() >= c->GetWidth() && (c->node[1]).l >= ite->level && ite->yes == 1)
+    //方向2
+    //if(ems.GetLength() >= c->GetLength() && ems.GetWidth() >= c->GetHigh() && ems.GetHigh() >= c->GetWidth())
+    if((c->node[1]).f == 1 && c->weight <= ems.weight &&(c->node[1]).l >= ems.level && ems.yes == 1&& ems.GetLength() >= c->GetLength() && ems.GetWidth() >= c->GetHigh() && ems.GetHigh() >= c->GetWidth())
+    {
+        if (((ems.cargo_code == c->materialCode) && (ems.layer > 0)) || (ems.cargo_code != c->materialCode) && (ems.max_weight > c->weight))
         {
-            int k = 0;  //如k = 5表示可以放得下
+            int k = 0;  //若k = 5表示可以放得下
+            int x = (ems.GetPoint1()).GetPointX();
+            int y = (ems.GetPoint1()).GetPointY();
+            int z = (ems.GetPoint1()).GetPointZ();
+
             Point point1(x, y, z);
             Point point2(x + c->GetLength(), y + c->GetHigh(), z + c->GetWidth());  //装箱的两点
             if(z == 0)
@@ -621,7 +1053,6 @@ bool DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b, EMSpace* space)
             {
                 Point *point[5];
                 point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
-                //cout << point[0]->GetPointX() << " " << point[0]->GetPointY() << " " << point[0]->GetPointZ() << endl;
                 point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
                 point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
                 point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
@@ -650,23 +1081,27 @@ bool DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b, EMSpace* space)
                     if(k == 5)
                         break;
                 }
-
-				delete_vector(point);
             }
-            double dist =pow((b->GetLength() - x - c->GetLength())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetHigh())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetWidth())*1.0, 2.0);
-            if(dist > maxdist && k == 5)
+            if(k == 5)
             {
-                maxdist = dist;
-                it_ems = ite;
-                //cout << "        2" << endl;
+                int k_ = c->Getnum();   //可放箱子个数选择
+                c->SetOri(k_, 2);
+                c->Setnum(k_ + 1);
             }
         }
+    }
 
-        //方向3
-        //if(ite->GetLength() >= c->GetWidth() && ite->GetWidth() >= c->GetLength() && ite->GetHigh() >= c->GetHigh())
-        if((c->node[2]).f == 1  &&c->weight <= ite->weight && ite->GetLength() >= c->GetWidth() && ite->GetWidth() >= c->GetLength() && ite->GetHigh() >= c->GetHigh() && (c->node[2]).l >= ite->level && ite->yes == 1)
+    //方向3
+    //if(ems.GetLength() >= c->GetWidth() && ems.GetWidth() >= c->GetLength() && ems.GetHigh() >= c->GetHigh())
+    if((c->node[2]).f == 1 && c->weight <= ems.weight &&(c->node[2]).l >= ems.level && ems.yes == 1&& ems.GetLength() >= c->GetWidth() && ems.GetWidth() >= c->GetLength() && ems.GetHigh() >= c->GetHigh())
+    {
+        if (((ems.cargo_code == c->materialCode) && (ems.layer > 0)) || (ems.cargo_code != c->materialCode) && (ems.max_weight > c->weight))
         {
-            int k = 0;  //如k = 5表示可以放得下
+            int k = 0;  //若k = 5表示可以放得下
+            int x = (ems.GetPoint1()).GetPointX();
+            int y = (ems.GetPoint1()).GetPointY();
+            int z = (ems.GetPoint1()).GetPointZ();
+
             Point point1(x, y, z);
             Point point2(x + c->GetWidth(), y + c->GetLength(), z + c->GetHigh());  //装箱的两点
             if(z == 0)
@@ -705,22 +1140,26 @@ bool DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b, EMSpace* space)
                     if(k == 5)
                         break;
                 }
-
-				delete_vector(point);
             }
-            double dist =pow((b->GetLength() - x - c->GetWidth())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetLength())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetHigh())*1.0, 2.0);
-            if(dist > maxdist && k == 5)
+            if(k == 5)
             {
-                maxdist = dist;
-                it_ems = ite;
-                //cout << "        3" << endl;
+                int k_ = c->Getnum();   //可放箱子个数选择
+                c->SetOri(k_, 3);
+                c->Setnum(k_ + 1);
             }
         }
-        //方向4
-        //if(ite->GetLength() >= c->GetWidth() && ite->GetWidth() >= c->GetHigh() && ite->GetHigh() >= c->GetLength())
-        if((c->node[3]).f == 1 &&c->weight <= ite->weight && ite->GetLength() >= c->GetWidth() && ite->GetWidth() >= c->GetHigh() && ite->GetHigh() >= c->GetLength() && (c->node[3]).l >= ite->level && ite->yes == 1)
+    }
+    //方向4
+    //if(ems.GetLength() >= c->GetWidth() && ems.GetWidth() >= c->GetHigh() && ems.GetHigh() >= c->GetLength())
+    if((c->node[3]).f == 1 && c->weight <= ems.weight &&(c->node[3]).l >= ems.level && ems.yes == 1 && ems.GetLength() >= c->GetWidth() && ems.GetWidth() >= c->GetHigh() && ems.GetHigh() >= c->GetLength())
+    {
+        if (((ems.cargo_code == c->materialCode) && (ems.layer > 0)) || (ems.cargo_code != c->materialCode) && (ems.max_weight > c->weight))
         {
-            int k = 0;  //如k = 5表示可以放得下
+            int k = 0;  //若k = 5表示可以放得下
+            int x = (ems.GetPoint1()).GetPointX();
+            int y = (ems.GetPoint1()).GetPointY();
+            int z = (ems.GetPoint1()).GetPointZ();
+
             Point point1(x, y, z);
             Point point2(x + c->GetWidth(), y + c->GetHigh(), z + c->GetLength());  //装箱的两点
             if(z == 0)
@@ -759,22 +1198,26 @@ bool DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b, EMSpace* space)
                     if(k == 5)
                         break;
                 }
-
-				delete_vector(point);
             }
-            double dist =pow((b->GetLength() - x - c->GetWidth())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetHigh())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetLength())*1.0, 2.0);
-            if(dist > maxdist && k == 5)
+            if(k == 5)
             {
-                maxdist = dist;
-                it_ems = ite;
-                //cout << "        4" << endl;
+                int k_ = c->Getnum();   //可放箱子个数选择
+                c->SetOri(k_, 4);
+                c->Setnum(k_ + 1);
             }
         }
-        //方向5
-        //if(ite->GetLength() >= c->GetHigh() && ite->GetWidth() >= c->GetLength() && ite->GetHigh() >= c->GetWidth())
-        if((c->node[4]).f == 1 &&c->weight <= ite->weight && ite->GetLength() >= c->GetHigh() && ite->GetWidth() >= c->GetLength() && ite->GetHigh() >= c->GetWidth() && (c->node[4]).l >= ite->level && ite->yes == 1)
+    }
+    //方向5
+    //if(ems.GetLength() >= c->GetHigh() && ems.GetWidth() >= c->GetLength() && ems.GetHigh() >= c->GetWidth())
+    if((c->node[4]).f == 1 && c->weight <= ems.weight &&(c->node[4]).l >= ems.level && ems.yes == 1 && ems.GetLength() >= c->GetHigh() && ems.GetWidth() >= c->GetLength() && ems.GetHigh() >= c->GetWidth())
+    {
+        if (((ems.cargo_code == c->materialCode) && (ems.layer > 0)) || (ems.cargo_code != c->materialCode) && (ems.max_weight > c->weight))
         {
-            int k = 0;  //如k = 5表示可以放得下
+            int k = 0;  //若k = 5表示可以放得下
+            int x = (ems.GetPoint1()).GetPointX();
+            int y = (ems.GetPoint1()).GetPointY();
+            int z = (ems.GetPoint1()).GetPointZ();
+
             Point point1(x, y, z);
             Point point2(x + c->GetHigh(), y + c->GetLength(), z + c->GetWidth());  //装箱的两点
             if(z == 0)
@@ -813,21 +1256,26 @@ bool DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b, EMSpace* space)
                     if(k == 5)
                         break;
                 }
-
-				delete_vector(point);
             }
-            double dist =pow((b->GetLength() - x - c->GetHigh())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetLength())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetWidth())*1.0, 2.0);
-            if(dist > maxdist && k == 5)
+            if(k == 5)
             {
-                maxdist = dist;
-                it_ems = ite;
+                int k_ = c->Getnum();   //可放箱子个数选择
+                c->SetOri(k_, 5);
+                c->Setnum(k_ + 1);
             }
         }
-        //方向6
-        //if(ite->GetLength() >= c->GetHigh() && ite->GetWidth() >= c->GetWidth() && ite->GetHigh() >= c->GetLength())
-        if((c->node[5]).f == 1 &&c->weight <= ite->weight && ite->GetLength() >= c->GetHigh() && ite->GetWidth() >= c->GetWidth() && ite->GetHigh() >= c->GetLength() && (c->node[5]).l >= ite->level && ite->yes == 1)
+    }
+    //方向6
+    //if(ems.GetLength() >= c->GetHigh() && ems.GetWidth() >= c->GetWidth() && ems.GetHigh() >= c->GetLength())
+    if((c->node[5]).f == 1 && c->weight <= ems.weight &&(c->node[5]).l >= ems.level && ems.yes == 1 && ems.GetLength() >= c->GetHigh() && ems.GetWidth() >= c->GetWidth() && ems.GetHigh() >= c->GetLength())
+    {
+        if (((ems.cargo_code == c->materialCode) && (ems.layer > 0)) || (ems.cargo_code != c->materialCode) && (ems.max_weight > c->weight))
         {
-            int k = 0;  //如k = 5表示可以放得下
+            int k = 0;  //若k = 5表示可以放得下
+            int x = (ems.GetPoint1()).GetPointX();
+            int y = (ems.GetPoint1()).GetPointY();
+            int z = (ems.GetPoint1()).GetPointZ();
+
             Point point1(x, y, z);
             Point point2(x + c->GetHigh(), y + c->GetWidth(), z + c->GetLength());  //装箱的两点
             if(z == 0)
@@ -866,386 +1314,13 @@ bool DFTRC_2(vector<Cargo*>vec, Cargo *c, Bin *b, EMSpace* space)
                     if(k == 5)
                         break;
                 }
-
-				delete_vector(point);
             }
-            double dist =pow((b->GetLength() - x - c->GetHigh())*1.0, 2.2)  + pow((b->GetWidth() - y - c->GetWidth())*1.0, 2.0) + pow((b->GetHigh() - z - c->GetLength())*1.0, 2.0);
-            if(dist > maxdist && k == 5)
+            if(k == 5)
             {
-                maxdist = dist;
-                it_ems = ite;
+                int k_ = c->Getnum();   //可放箱子个数选择
+                c->SetOri(k_, 6);
+                c->Setnum(k_ + 1);
             }
-        }
-
-    }
-
-    if(it_ems == vece.end())
-    {
-        k++;
-
-		if(!bin[k])
-			return false;
-
-        vece.clear();
-        Point P1 = bin[k]->GetPoint1();
-        Point P2 = bin[k]->GetPoint2();
-        EMSpace ems_(P1, P2);
-        vece.push_back(ems_);
-        c->numofpack = bin[k]->GetNum();
-		*space = ems_;
-        // return ems_;
-		return true;
-    }
-    else
-    {
-        c->numofpack = b->GetNum();
-        // return *it_ems; //返回用于装箱的空间
-		*space = *it_ems;
-		return true;
-    }
-}
-
-//确定装箱的方向
-int CargoOrientation(vector<Cargo*>vec, Cargo *c, EMSpace ems)
-{
-    c->Setnum(0);
-    for(int j=0; j<6; j++)
-    {
-        c->SetOri(j, 0);
-    }
-    //cout << (c->node[0]).f << " " << c->weight << " " << ems.weight << " " << (c->node[0]).l << " " << ems.level << " " << ems.yes << endl;
-    //方向1
-    //if(ems.GetLength() >= c->GetLength() && ems.GetWidth() >= c->GetWidth() && ems.GetHigh() >= c->GetHigh())
-    if((c->node[0]).f == 1&& c->weight <= ems.weight && (c->node[0]).l >= ems.level && ems.yes == 1 && ems.GetLength() >= c->GetLength() && ems.GetWidth() >= c->GetWidth() && ems.GetHigh() >= c->GetHigh())
-    {
-        //cout << "yes" << endl;
-        int k = 0;  //若k = 5表示可以放得下
-        int x = (ems.GetPoint1()).GetPointX();
-        int y = (ems.GetPoint1()).GetPointY();
-        int z = (ems.GetPoint1()).GetPointZ();
-
-        Point point1(x, y, z);
-        Point point2(x + c->GetLength(), y + c->GetWidth(), z + c->GetHigh());  //装箱的两点
-        if(z == 0)
-        {
-            k = 5;
-        }
-        else    //堆积问题
-        {
-            Point *point[5];
-            point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
-            point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
-
-            for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
-            {
-                if(*it == c)
-                {
-                    break;
-                }
-                Point point1_ = (*it)->GetPoint1();
-                Point point2_ = (*it)->GetPoint2();
-                for(int i = 0; i < 5; i++)
-                {
-                    if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
-                    {
-                        if(a[i] == 0)
-                        {
-                            a[i] = 1;
-                            k++;
-                        }
-                    }
-                }
-                if(k == 5)
-                    break;
-            }
-
-        }
-        if(k == 5)
-        {
-            int k_ = c->Getnum();   //可放箱子个数选择
-            c->SetOri(k_, 1);
-            c->Setnum(k_ + 1);
-        }
-    }
-
-    //方向2
-    //if(ems.GetLength() >= c->GetLength() && ems.GetWidth() >= c->GetHigh() && ems.GetHigh() >= c->GetWidth())
-    if((c->node[1]).f == 1 && c->weight <= ems.weight &&(c->node[1]).l >= ems.level && ems.yes == 1&& ems.GetLength() >= c->GetLength() && ems.GetWidth() >= c->GetHigh() && ems.GetHigh() >= c->GetWidth())
-    {
-        int k = 0;  //若k = 5表示可以放得下
-        int x = (ems.GetPoint1()).GetPointX();
-        int y = (ems.GetPoint1()).GetPointY();
-        int z = (ems.GetPoint1()).GetPointZ();
-
-        Point point1(x, y, z);
-        Point point2(x + c->GetLength(), y + c->GetHigh(), z + c->GetWidth());  //装箱的两点
-        if(z == 0)
-        {
-            k = 5;
-        }
-        else    //堆积问题
-        {
-            Point *point[5];
-            point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
-            point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
-
-            for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
-            {
-                if(*it == c)
-                {
-                    break;
-                }
-                Point point1_ = (*it)->GetPoint1();
-                Point point2_ = (*it)->GetPoint2();
-                for(int i = 0; i < 5; i++)
-                {
-                    if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
-                    {
-                        if(a[i] == 0)
-                        {
-                            a[i] = 1;
-                            k++;
-                        }
-                    }
-                }
-                if(k == 5)
-                    break;
-            }
-        }
-        if(k == 5)
-        {
-            int k_ = c->Getnum();   //可放箱子个数选择
-            c->SetOri(k_, 2);
-            c->Setnum(k_ + 1);
-        }
-    }
-
-    //方向3
-    //if(ems.GetLength() >= c->GetWidth() && ems.GetWidth() >= c->GetLength() && ems.GetHigh() >= c->GetHigh())
-    if((c->node[2]).f == 1 && c->weight <= ems.weight &&(c->node[2]).l >= ems.level && ems.yes == 1&& ems.GetLength() >= c->GetWidth() && ems.GetWidth() >= c->GetLength() && ems.GetHigh() >= c->GetHigh())
-    {
-        int k = 0;  //若k = 5表示可以放得下
-        int x = (ems.GetPoint1()).GetPointX();
-        int y = (ems.GetPoint1()).GetPointY();
-        int z = (ems.GetPoint1()).GetPointZ();
-
-        Point point1(x, y, z);
-        Point point2(x + c->GetWidth(), y + c->GetLength(), z + c->GetHigh());  //装箱的两点
-        if(z == 0)
-        {
-            k = 5;
-        }
-        else    //堆积问题
-        {
-            Point *point[5];
-            point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
-            point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
-
-            for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
-            {
-                if(*it == c)
-                {
-                    break;
-                }
-                Point point1_ = (*it)->GetPoint1();
-                Point point2_ = (*it)->GetPoint2();
-                for(int i = 0; i < 5; i++)
-                {
-                    if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
-                    {
-                        if(a[i] == 0)
-                        {
-                            a[i] = 1;
-                            k++;
-                        }
-                    }
-                }
-                if(k == 5)
-                    break;
-            }
-        }
-        if(k == 5)
-        {
-            int k_ = c->Getnum();   //可放箱子个数选择
-            c->SetOri(k_, 3);
-            c->Setnum(k_ + 1);
-        }
-    }
-    //方向4
-    //if(ems.GetLength() >= c->GetWidth() && ems.GetWidth() >= c->GetHigh() && ems.GetHigh() >= c->GetLength())
-    if((c->node[3]).f == 1 && c->weight <= ems.weight &&(c->node[3]).l >= ems.level && ems.yes == 1 && ems.GetLength() >= c->GetWidth() && ems.GetWidth() >= c->GetHigh() && ems.GetHigh() >= c->GetLength())
-    {
-        int k = 0;  //若k = 5表示可以放得下
-        int x = (ems.GetPoint1()).GetPointX();
-        int y = (ems.GetPoint1()).GetPointY();
-        int z = (ems.GetPoint1()).GetPointZ();
-
-        Point point1(x, y, z);
-        Point point2(x + c->GetWidth(), y + c->GetHigh(), z + c->GetLength());  //装箱的两点
-        if(z == 0)
-        {
-            k = 5;
-        }
-        else    //堆积问题
-        {
-            Point *point[5];
-            point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
-            point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
-
-            for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
-            {
-                if(*it == c)
-                {
-                    break;
-                }
-                Point point1_ = (*it)->GetPoint1();
-                Point point2_ = (*it)->GetPoint2();
-                for(int i = 0; i < 5; i++)
-                {
-                    if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
-                    {
-                        if(a[i] == 0)
-                        {
-                            a[i] = 1;
-                            k++;
-                        }
-                    }
-                }
-                if(k == 5)
-                    break;
-            }
-        }
-        if(k == 5)
-        {
-            int k_ = c->Getnum();   //可放箱子个数选择
-            c->SetOri(k_, 4);
-            c->Setnum(k_ + 1);
-        }
-    }
-    //方向5
-    //if(ems.GetLength() >= c->GetHigh() && ems.GetWidth() >= c->GetLength() && ems.GetHigh() >= c->GetWidth())
-    if((c->node[4]).f == 1 && c->weight <= ems.weight &&(c->node[4]).l >= ems.level && ems.yes == 1 && ems.GetLength() >= c->GetHigh() && ems.GetWidth() >= c->GetLength() && ems.GetHigh() >= c->GetWidth())
-    {
-        int k = 0;  //若k = 5表示可以放得下
-        int x = (ems.GetPoint1()).GetPointX();
-        int y = (ems.GetPoint1()).GetPointY();
-        int z = (ems.GetPoint1()).GetPointZ();
-
-        Point point1(x, y, z);
-        Point point2(x + c->GetHigh(), y + c->GetLength(), z + c->GetWidth());  //装箱的两点
-        if(z == 0)
-        {
-            k = 5;
-        }
-        else    //堆积问题
-        {
-            Point *point[5];
-            point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
-            point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
-
-            for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
-            {
-                if(*it == c)
-                {
-                    break;
-                }
-                Point point1_ = (*it)->GetPoint1();
-                Point point2_ = (*it)->GetPoint2();
-                for(int i = 0; i < 5; i++)
-                {
-                    if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
-                    {
-                        if(a[i] == 0)
-                        {
-                            a[i] = 1;
-                            k++;
-                        }
-                    }
-                }
-                if(k == 5)
-                    break;
-            }
-        }
-        if(k == 5)
-        {
-            int k_ = c->Getnum();   //可放箱子个数选择
-            c->SetOri(k_, 5);
-            c->Setnum(k_ + 1);
-        }
-    }
-    //方向6
-    //if(ems.GetLength() >= c->GetHigh() && ems.GetWidth() >= c->GetWidth() && ems.GetHigh() >= c->GetLength())
-    if((c->node[5]).f == 1 && c->weight <= ems.weight &&(c->node[5]).l >= ems.level && ems.yes == 1 && ems.GetLength() >= c->GetHigh() && ems.GetWidth() >= c->GetWidth() && ems.GetHigh() >= c->GetLength())
-    {
-        int k = 0;  //若k = 5表示可以放得下
-        int x = (ems.GetPoint1()).GetPointX();
-        int y = (ems.GetPoint1()).GetPointY();
-        int z = (ems.GetPoint1()).GetPointZ();
-
-        Point point1(x, y, z);
-        Point point2(x + c->GetHigh(), y + c->GetWidth(), z + c->GetLength());  //装箱的两点
-        if(z == 0)
-        {
-            k = 5;
-        }
-        else    //堆积问题
-        {
-            Point *point[5];
-            point[0] = new Point((point1.GetPointX() + point2.GetPointX())/2, (point1.GetPointY() + point2.GetPointY())/2, point1.GetPointZ()); //五点判断法
-            point[1] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[2] = new Point((3*point1.GetPointX() + point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            point[3] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (3*point1.GetPointY() + point2.GetPointY())/4, point1.GetPointZ());
-            point[4] = new Point((point1.GetPointX() + 3*point2.GetPointX())/4, (point1.GetPointY() + 3*point2.GetPointY())/4, point1.GetPointZ());
-            int a[5] = {0, 0, 0, 0, 0}; //表示五点均未支撑
-
-            for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
-            {
-                if(*it == c)
-                {
-                    break;
-                }
-                Point point1_ = (*it)->GetPoint1();
-                Point point2_ = (*it)->GetPoint2();
-                for(int i = 0; i < 5; i++)
-                {
-                    if(point2_.GetPointZ() == point[i]->GetPointZ() && point[i]->GetPointX() >= point1_.GetPointX() && point[i]->GetPointX() <= point2_.GetPointX() && point[i]->GetPointY() >= point1_.GetPointY() && point[i]->GetPointY() <= point2_.GetPointY())
-                    {
-                        if(a[i] == 0)
-                        {
-                            a[i] = 1;
-                            k++;
-                        }
-                    }
-                }
-                if(k == 5)
-                    break;
-            }
-        }
-        if(k == 5)
-        {
-            int k_ = c->Getnum();   //可放箱子个数选择
-            c->SetOri(k_, 6);
-            c->Setnum(k_ + 1);
         }
     }
 
@@ -1262,11 +1337,11 @@ void CargoPacking(Cargo *c, EMSpace ems, int flag)   //用于装箱的箱子， 装箱的空
     int y_ = (ems.GetPoint1()).GetPointY();
     int z_ = (ems.GetPoint1()).GetPointZ();
 
-    //cout << "test 1" << endl;
-    //cout << x_ << " " << y_ << " " << z_ << endl;
-    //cout << "test 2" << endl;
-    //cout << c->GetLength() << " " << c->GetWidth() << " " << c->GetHigh() << endl;
-    //cout << "test 3" << endl;
+    //// << "test 1" << endl;
+    //// << x_ << " " << y_ << " " << z_ << endl;
+    //// << "test 2" << endl;
+    //// << c->GetLength() << " " << c->GetWidth() << " " << c->GetHigh() << endl;
+    //// << "test 3" << endl;
     if(flag == 1)
     {
         int x = x_ + c->GetLength();
@@ -1274,7 +1349,7 @@ void CargoPacking(Cargo *c, EMSpace ems, int flag)   //用于装箱的箱子， 装箱的空
         int z = z_ + c->GetHigh();
         Point cargop2(x, y, z);
         c->SetPoint2(cargop2);
-        //cout << x << " " << y << " " << z << endl;
+        //// << x << " " << y << " " << z << endl;
     }
     else if(flag == 2)
     {
@@ -1283,7 +1358,7 @@ void CargoPacking(Cargo *c, EMSpace ems, int flag)   //用于装箱的箱子， 装箱的空
         int z = z_ + c->GetWidth();
         Point cargop2(x, y, z);
         c->SetPoint2(cargop2);
-        //cout << x << " " << y << " " << z << endl;
+        //// << x << " " << y << " " << z << endl;
     }
     else if(flag == 3)
     {
@@ -1292,7 +1367,7 @@ void CargoPacking(Cargo *c, EMSpace ems, int flag)   //用于装箱的箱子， 装箱的空
         int z = z_ + c->GetHigh();
         Point cargop2(x, y, z);
         c->SetPoint2(cargop2);
-        //cout << x << " " << y << " " << z << endl;
+        //// << x << " " << y << " " << z << endl;
     }
     else if(flag == 4)
     {
@@ -1301,7 +1376,7 @@ void CargoPacking(Cargo *c, EMSpace ems, int flag)   //用于装箱的箱子， 装箱的空
         int z = z_ + c->GetLength();
         Point cargop2(x, y, z);
         c->SetPoint2(cargop2);
-        //cout << x << " " << y << " " << z << endl;
+        //// << x << " " << y << " " << z << endl;
     }
     else if(flag == 5)
     {
@@ -1310,7 +1385,7 @@ void CargoPacking(Cargo *c, EMSpace ems, int flag)   //用于装箱的箱子， 装箱的空
         int z = z_ + c->GetWidth();
         Point cargop2(x, y, z);
         c->SetPoint2(cargop2);
-        //cout << x << " " << y << " " << z << endl;
+        //// << x << " " << y << " " << z << endl;
     }
     else if(flag == 6)
     {
@@ -1319,274 +1394,288 @@ void CargoPacking(Cargo *c, EMSpace ems, int flag)   //用于装箱的箱子， 装箱的空
         int z = z_ + c->GetLength();
         Point cargop2(x, y, z);
         c->SetPoint2(cargop2);
-        //cout << x << " " << y << " " << z << endl;
+        //// << x << " " << y << " " << z << endl;
     }
 
 }
 
-json calcGoodList(vector<Cargo*> vec, int& index) {
-	json cargoes = json::array();
+int map_input_orientation(int orientation)
+{
+    return orientation;
+    switch (orientation)
+    {
+    case 1:
+        return 4;
+    case 2:
+        return 3;
+    case 3:
+        return 2;
+    case 4:
+        return 5;
+    case 5:
+        return 6;
+    case 6:
+        return 1;
+    }
+    throw runtime_error(
+        string("unknown input orientation number ") + to_string(orientation));
+}
 
-	for (Cargo* cargo : vec) {
-		Point bottom_left = cargo->GetPoint1();
-		cargoes.push_back({
-				{"materialCode", cargo->materialcode},
-				{"restrictionFlag", cargo->flag},
-				{"x", bottom_left.GetPointX() * 10 },
-				{"y", bottom_left.GetPointY() * 10},
-				{"z", bottom_left.GetPointZ() * 10},
-				{"trainIndex", index++}
-			});
-	}
+int map_output_orientation(int orientation)
+{
+    return orientation;
+    switch (orientation)
+    {
+    case 1:
+        return 6;
+    case 2:
+        return 3;
+    case 3:
+        return 2;
+    case 4:
+        return 1;
+    case 5:
+        return 4;
+    case 6:
+        return 5;
+    }
+    throw runtime_error(string("unknown output orientation number ") + to_string(orientation));
+}
 
-	return cargoes;
+int temp_convert(int orientation)
+{
+    if (orientation == 2)
+        return 3;
+    else if (orientation == 3)
+        return 2;
+    else
+        return orientation;
+}
+
+json calcGoodList(vector<Cargo*> vec, int& index)
+{
+    json cargoes = json::array();
+
+    for (Cargo* cargo : vec)
+    {
+        Point bottom_left = cargo->GetPoint1();
+        cargoes.push_back(
+        {
+            {"materialCode", cargo->materialCode},
+            {"restrictionFlag", map_output_orientation(temp_convert(cargo->flag)) },
+            {"z", bottom_left.GetPointX() * 10 },
+            {"x", bottom_left.GetPointY() * 10},
+            {"y", bottom_left.GetPointZ() * 10},
+
+            // {"x", bottom_left.GetPointX() * 10 },
+            // {"y", bottom_left.GetPointY() * 10},
+            // {"z", bottom_left.GetPointZ() * 10},
+            {"trainIndex", index++}
+        });
+    }
+
+    return cargoes;
+}
+
+json calcGoodList(const Cargo* cargo, int& index)
+{
+    json cargoes = json::array();
+
+    Point bottom_left = cargo->GetPoint1();
+    cargoes.push_back(
+    {
+        {"materialCode", cargo->materialCode},
+        {"restrictionFlag", map_output_orientation(temp_convert(cargo->flag)) },
+        {"z", bottom_left.GetPointX() * 10 },
+        {"x", bottom_left.GetPointY() * 10},
+        {"y", bottom_left.GetPointZ() * 10},
+
+        // {"x", bottom_left.GetPointX() * 10 },
+        // {"y", bottom_left.GetPointY() * 10},
+        // {"z", bottom_left.GetPointZ() * 10},
+        {"trainIndex", index++}
+    });
+
+    return cargoes;
 }
 
 json calcStepList(const map<string, vector<Cargo*>>& orders, int& index)
 {
-	int step_index = 1;
-	json steps = json::array();;
+    int step_index = 1;
+    json steps = json::array();;
 
-	for (auto&& pair : orders) {
-		steps.push_back({
-				{"step", step_index++},
-				{"qty", pair.second.size()},
-				{"directionNum", "1*1*1"},
-				{"orderCode", pair.first},
-				{"goodList", calcGoodList(pair.second, index)}
-			});
-	}
+    // for (auto&& pair : orders) {
+    // 	steps.push_back({
+    // 			{"step", step_index++},
+    // 			{"qty", pair.second.size()},
+    // 			{"directionNum", "1*1*1"},
+    // 			{"orderCode", pair.first},
+    // 			{"goodList", calcGoodList(pair.second, index)}
+    // 		});
+    // }
 
-	return steps;
+    vector<pair<string, vector<Cargo*>>> orders_vec(orders.begin(), orders.end());
+    sort(orders_vec.begin(), orders_vec.end(),
+         [](const pair<string, vector<Cargo*>>& px, const pair<string, vector<Cargo*>>& py)
+    {
+        return px.second[0]->ding < py.second[0]->ding;
+    });
+
+    for (auto&& pair : orders_vec)
+    {
+        for (const Cargo* cargo : pair.second)
+        {
+            steps.push_back(
+            {
+                {"step", step_index++},
+                {"qty", 1},
+                {"directionNum", "1*1*1"},
+                {"orderCode", pair.first},
+                {"goodList", calcGoodList(cargo, index) }
+            });
+        }
+    }
+
+    return steps;
 }
 
-int calcGoodNum(const map<string, vector<Cargo*>>& orders) {
-	int num = 0;
+int calcGoodNum(const map<string, vector<Cargo*>>& orders)
+{
+    int num = 0;
 
-	for (auto&& pair : orders) {
-		num += pair.second.size();
-	}
+    for (auto&& pair : orders)
+    {
+        num += pair.second.size();
+    }
 
-	return num;
+    return num;
 }
 
-json calcTrains(const map<int, map<string, vector<Cargo*>>>& containers) {
-	json trainList = json::array();
+json calcTrains(const map<int, map<string, vector<Cargo*>>>& containers)
+{
+    json trainList = json::array();
 
-	for (auto&& pair : containers) {
-		int index =0;
+    for (auto&& pair : containers)
+    {
+        int index =0;
 
-		int64_t totalCapacityCM3 = 0;
-		double totalWeight = 0;
+        int64_t totalCapacityCM3 = 0;
+        double totalWeight = 0;
 
-		for (auto&& p2 : pair.second) {
-			for (Cargo* cargo : p2.second) {
-				totalCapacityCM3 += cargo->GetVolumeCM3();
-				totalWeight += cargo->GetWeight();
-			}
-		}
+        for (auto&& p2 : pair.second)
+        {
+            for (Cargo* cargo : p2.second)
+            {
+                totalCapacityCM3 += cargo->GetVolumeCM3();
+                totalWeight += cargo->GetWeight();
+            }
+        }
 
-		double totalCapacityM3 = (double)totalCapacityCM3 / 10e6;
+        double totalCapacityM3 = (double)totalCapacityCM3 / 10e6;
 
-		Bin* currentBin = bin[pair.first];
+        Bin* currentBin = bin[pair.first];
 
-		double packingRate = (double)totalCapacityCM3 / currentBin->GetVolumeCM3();
+        double packingRate = (double)totalCapacityCM3 / currentBin->GetVolumeCM3();
 
-		trainList.push_back({
-				{ "train", pair.first},
-				{"modelCode", bin[pair.first]->modelCode },
-				{"goodNum", calcGoodNum(pair.second)},
-				{"totalCapacity", totalCapacityM3 },  // !!!
-				{"totalWeight", totalWeight}, /// !!!
-				{"packingRate", packingRate}, /// !!!s
-				{"stepList", calcStepList(pair.second, index)}
-			});
-	}
+        trainList.push_back(
+        {
+            { "train", pair.first},
+            {"modelCode", bin[pair.first]->modelCode },
+            {"goodNum", calcGoodNum(pair.second)},
+            {"totalCapacity", totalCapacityM3 },  // !!!
+            {"totalWeight", totalWeight}, /// !!!
+            {"packingRate", packingRate}, /// !!!s
+            {"stepList", calcStepList(pair.second, index) }
+        });
+    }
 
-	return trainList;
+    return trainList;
 }
 
 string another_ANS(vector<Cargo*>  vec, bool valid)
 {
-	sort(vec.begin(), vec.end(), ComparePacking2);
+    sort(vec.begin(), vec.end(), ComparePacking1);
 
-	json reply;
+    json reply;
 
-	reply["tradeId"] = global_tradeId;
+    reply["tradeId"] = global_tradeId;
 
-	if (!valid) {
-		reply["status"] = "0";
-		return reply.dump();
-	}
+    vector<Cargo*>::iterator cargo_end = vec.end() - 1;
+    if ((*cargo_end)->numofpack >= maxnbin - 100)
+    {
+        map<int, map<string, vector<Cargo*>>> containers;
 
-	map<int, map<string, vector<Cargo*>>> containers;
+        for (Cargo* cargo : vec){
+            if(cargo->numofpack < maxnbin - 100){
+                containers[cargo->numofpack][cargo->orderCode].push_back(cargo);
+            }
+        }
 
-	for (Cargo* cargo : vec)
-		containers[cargo->numofpack][cargo->orderCode].push_back(cargo);
+        reply["status"] = "0";
+        reply["msg"] = "unenough bins";
+        reply["carNum"] = containers.size();
+        int vec_size = vec.size();
+        for(Cargo* cargo : vec){
+            if(cargo->numofpack >= maxnbin - 100)
+            {
+                vec_size--;
+            }
+        }
+        reply["goodNum"] = vec_size;
 
-	reply["status"] = "1";
-	reply["carNum"] = containers.size();
-	reply["goodNum"] = vec.size();
+        {
+            int64_t totalCapacityCM3 = 0;
+            double totalWeight = 0;
 
-	{
-		int64_t totalCapacityCM3 = 0;
-		double totalWeight = 0;
+            for (Cargo* cargo : vec)
+            {
+                totalCapacityCM3 += cargo->GetVolumeCM3();
+                totalWeight += cargo->GetWeight();
+            }
 
-		for (Cargo* cargo : vec) {
-			totalCapacityCM3 += cargo->GetVolumeCM3();
-			totalWeight += cargo->GetWeight();
-		}
+            double totalCapacityM3 = (double)totalCapacityCM3 / 10e6;
 
-		double totalCapacityM3 = (double)totalCapacityCM3 / 10e6;
+            reply["totalCapacity"] = totalCapacityM3;
+            reply["totalWeight"] = totalWeight;
+        }
 
-		reply["totalCapacity"] = totalCapacityM3;
-		reply["totalWeight"] = totalWeight;
-	}
+        reply["trainList"] = calcTrains(containers);
 
-	reply["trainList"] = calcTrains(containers);
+        return reply.dump();
 
-	return reply.dump();
+    }
+    else
+    {
+        map<int, map<string, vector<Cargo*>>> containers;
+
+        for (Cargo* cargo : vec)
+            containers[cargo->numofpack][cargo->orderCode].push_back(cargo);
+
+        reply["status"] = "1";
+        reply["carNum"] = containers.size();
+        reply["goodNum"] = vec.size();
+
+        {
+            int64_t totalCapacityCM3 = 0;
+            double totalWeight = 0;
+
+            for (Cargo* cargo : vec)
+            {
+                totalCapacityCM3 += cargo->GetVolumeCM3();
+                totalWeight += cargo->GetWeight();
+            }
+
+            double totalCapacityM3 = (double)totalCapacityCM3 / 10e6;
+
+            reply["totalCapacity"] = totalCapacityM3;
+            reply["totalWeight"] = totalWeight;
+        }
+
+        reply["trainList"] = calcTrains(containers);
+
+        return reply.dump();
+    }
 }
-
-// string ANS(vector<Cargo*> vec, bool valid)
-// {
-// 	sort(vec.begin(), vec.end(), ComparePacking2);
-
-//     int step_ = 1;
-//     int numofpack = -1;
-
-//     json all;
-// 	all["tradeId"] = global_tradeId;
-
-// 	if (valid) {
-// 		all["status"] = "ok";
-// 	} else {
-// 		all["status"] = "failed";
-// 		return all.dump();
-// 	}
-
-// 	all["msg"] = "";
-
-//     all["carNum"] = maxnbin;
-//     all["goodNum"] = maxn;
-//     all["totalCapacity"] = 0;
-//     all["totalWeight"] = 1;
-
-//     json em = json::array();
-
-//     json train[maxnbin_];
-//     json trainem = json::array();
-//     trainem.clear();
-
-//     int k = 0;
-//     for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
-//     {
-//         Cargo* c = *it;
-//         if(c->numofpack != numofpack)
-//         {
-//             if(k != 0)
-//             {
-//                 train[numofpack]["stepList"] = trainem;
-//                 em.push_back(train[numofpack]);
-//                 trainem.clear();
-//             }
-//             k++;
-// 			numofpack = c->numofpack;
-
-//             train[c->numofpack]["train"] = c->numofpack;
-//             train[c->numofpack]["modelCode"] = bin[c->numofpack]->modelCode;
-//             train[c->numofpack]["goodNum"] = 0;
-//             train[c->numofpack]["totalCapacity"] = 0;
-//             train[c->numofpack]["totalWeight"] = 0;
-//             train[c->numofpack]["packingRate"] = 0;
-//         }
-
-//         json st;
-//         st["step"] = step_;
-//         step_++;
-//         st["qty"] = 1;
-//         st["directionNum"] = "1*1*1";
-
-//         json good;
-//         good["materialCode"] = c->materialcode;
-//         good["restrictionFlag"] = c->flag;
-//         good["x"] = (c->GetPoint1()).GetPointX() * 10;
-//         good["y"] = (c->GetPoint1()).GetPointY() * 10;
-//         good["z"] = (c->GetPoint1()).GetPointZ()* 10;
-//         good["orderCode"] = c->orderCode;
-//         good["trainIndex"] = c->numofpack;
-
-//         st["goodList"] = good;
-//         trainem.push_back(st);
-//     }
-
-//     train[numofpack]["stepList"] = trainem;
-//     em.push_back(train[numofpack]);
-
-//     all["trainList"] = em;
-
-//     //cout << all << endl;
-//     string ans = all.dump();
-//     return ans;
-//     /*
-//     int step_ = 1;
-//     int numofpackL = -1;
-//     int numofpackR = -1;
-//     string str = "{\"status\":1,";
-//     str += "\"msq\":\"\",";
-//     str += "\"carNum\":";
-//     str = str + to_string(maxnbin) + ",";
-//     str = str + "\"goodNum\":" + to_string(maxn) + ",";
-//     str = str + "\"totalCapacity\": 0,";
-//     str = str + "\"totalWeight\":1,";
-//     str = str + "\"trainList\":[";
-
-//     for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
-//     {
-//         Cargo* c = *it;
-
-//         if(c->numofpack != numofpackL)
-//         {
-//             if(it != vec.begin())
-//             {
-//                 str += "]}";
-//             }
-//             str += "{";
-//             str += "\"train\":" + to_string(c->numofpack) +",";
-//             str += "\"modelCode\":\"" + bin[c->numofpack]->modelCode + "\",";
-//             str += "\"goodNum\":0,";
-//             str += "\"totalCapacity\":0,";
-//             str += "\"totalWeight\":0,";
-//             str += "\"packingRate\":0,";
-//             str += "\"stepList\":[";
-//             numofpackL = c->numofpack;
-//         }
-
-//         str += "{\"step\":" + to_string(step_) + ",";
-//         step_++;
-//         str += "\"qty\":1,";
-//         str += "\"directionNum\":\"1*1*1\",";
-//         str += "\"goodList\":[{";
-
-//         str += "\"materialCode\":\"" + c->materialcode + "\",";
-//         str += "\"restrictionFlag\":" + to_string(c->flag) + ",";
-//         str += "\"x\":" + to_string((c->GetPoint1()).GetPointX()) + ",";
-//         str += "\"y\":" + to_string((c->GetPoint1()).GetPointY()) + ",";
-//         str += "\"z\":" + to_string((c->GetPoint1()).GetPointZ()) + ",";
-//         str += "\"orderCode\":" + to_string(c->orderCode) + ",";
-//         str += "\"trainIndex\":" + to_string(c->numofpack);
-//         str += "}]}";
-
-//         if(it == vec.end() - 1)
-//         {
-//             str += "]}";
-//         }
-//     }
-
-//     str += "]}";
-//     return str;
-//     */
-// }
 
 void ShowCargo(vector<Cargo*> vec)     //装箱箱子位置输出
 {
@@ -1603,7 +1692,7 @@ void ShowCargo(vector<Cargo*> vec)     //装箱箱子位置输出
     str = str + ", \"z2\" : ";
     str = str + to_string((bin[0]->GetPoint2()).GetPointZ());
     str = str + "}}\n";
-    cout << str;
+    // // << str;
     const char *ch = str.c_str();
     SocketUDP(ch);
 
@@ -1611,9 +1700,9 @@ void ShowCargo(vector<Cargo*> vec)     //装箱箱子位置输出
     for(vector<Cargo*>::iterator it = vec.begin(); it != vec.end(); it++)
     {
         Cargo* c = *it;
-        printf("输出货物的位置:\n");
+        // printf("输出货物的位置:\n");
         ShowPoint(c->GetPoint1(), c->GetPoint2());
-        cout << "货物编号：" << c->GetId() << " 订单号: " << c->ding << " 被装集装箱序列号：" << c->numofpack << endl;
+        // << "货物编号：" << c->GetId() << " 订单号: " << c->ding << " 被装集装箱序列号：" << c->numofpack << endl;
         //printf("{\"type\" : \"cargo\", \"cuboid\" : {\"x1\" : %d, \"x2\" : %d, \"y1\" : %d, \"y2\" : %d, \"z1\" : %d, \"z2\" : %d }}\n", (c->GetPoint1()).GetPointX(), (c->GetPoint2()).GetPointX(), (c->GetPoint1()).GetPointY(), (c->GetPoint2()).GetPointY(), (c->GetPoint1()).GetPointZ(), (c->GetPoint2()).GetPointZ());
         string str = "{\"type\" : \"cargo\", \"cuboid\" : {\"x1\" : ";
         str = str + to_string((c->GetPoint1()).GetPointX());
@@ -1628,7 +1717,7 @@ void ShowCargo(vector<Cargo*> vec)     //装箱箱子位置输出
         str = str + ", \"z2\" : ";
         str = str + to_string((c->GetPoint2()).GetPointZ());
         str = str + "}}\n";
-        cout << str;
+        // << str;
         const char *ch = str.c_str();
         if((*it)->numofpack == CHE && ONE == 1)
         {
@@ -1677,6 +1766,11 @@ void StateUpdate(Cargo *c, int flag)
                     ems.level = (*ite).level;
                     ems.yes = (*ite).yes;
                     ems.weight = (*ite).weight;
+
+                    ems.max_weight = ite->max_weight;
+                    ems.cargo_code = ite->cargo_code;
+                    ems.layer = ite->layer;
+
                     vece2.push_back(ems);
                 }
             }
@@ -1695,6 +1789,11 @@ void StateUpdate(Cargo *c, int flag)
                     ems.level = (*ite).level;
                     ems.yes = (*ite).yes;
                     ems.weight = (*ite).weight;
+
+                    ems.max_weight = ite->max_weight;
+                    ems.cargo_code = ite->cargo_code;
+                    ems.layer = ite->layer;
+
                     vece2.push_back(ems);
                 }
             }
@@ -1713,6 +1812,11 @@ void StateUpdate(Cargo *c, int flag)
                     ems.level = (*ite).level;
                     ems.yes = (*ite).yes;
                     ems.weight = (*ite).weight;
+
+                    ems.max_weight = ite->max_weight;
+                    ems.cargo_code = ite->cargo_code;
+                    ems.layer = ite->layer;
+
                     vece2.push_back(ems);
                 }
             }
@@ -1731,6 +1835,11 @@ void StateUpdate(Cargo *c, int flag)
                     ems.level = (*ite).level;
                     ems.yes = (*ite).yes;
                     ems.weight = (*ite).weight;
+
+                    ems.max_weight = ite->max_weight;
+                    ems.cargo_code = ite->cargo_code;
+                    ems.layer = ite->layer;
+
                     vece2.push_back(ems);
                 }
             }
@@ -1749,6 +1858,11 @@ void StateUpdate(Cargo *c, int flag)
                     ems.level = (*ite).level;
                     ems.yes = (*ite).yes;
                     ems.weight = (*ite).weight;
+
+                    ems.max_weight = ite->max_weight;
+                    ems.cargo_code = ite->cargo_code;
+                    ems.layer = ite->layer;
+
                     vece2.push_back(ems);
                 }
             }
@@ -1769,6 +1883,25 @@ void StateUpdate(Cargo *c, int flag)
                     ems.weight = c->weight;
                     //ems.level = (*ite).level;
                     //ems.yes = (*ite).yes;
+
+                    if (ite->cargo_code == c->materialCode)
+                    {
+                        ems.cargo_code = c->materialCode;
+                        ems.max_weight = ite->max_weight;
+                        ems.layer = ite->layer - 1;
+                        //cerr << "if - layer = " << ems.layer << endl;
+                    }
+                    else
+                    {
+                        ems.max_weight = min(ite->max_weight - c->weight, c->weight);
+                        ems.cargo_code = c->materialCode;
+                        //!!!						ems.layer = c->stackLevel;
+                        ems.layer = (c->node[flag - 1]).stackLevel;
+                        //cerr << "else - layer = " << ems.layer << endl;
+
+                    }
+
+
                     vece2.push_back(ems);
                 }
             }
@@ -1813,12 +1946,13 @@ void StateUpdate(Cargo *c, int flag)
         Point pc_1 = c->GetPoint1();    //箱子的两点
         Point pc_2 = c->GetPoint2();
         if(pv_2.GetPointX() <= pc_1.GetPointX() && pv_1.GetPointZ() <= pc_2.GetPointZ())
+        //if(pv_1.GetPointX() <= pc_1.GetPointX() && pv_1.GetPointZ() <= pc_1.GetPointZ())
         {
             vece.erase(ite);
             ite--;
         }
     }
-
+    /*
     for(ite = vece.begin(); ite != vece.end(); ite++)
     {
         Point pv_1 = ite->GetPoint1();  //空间的两点
@@ -1828,39 +1962,42 @@ void StateUpdate(Cargo *c, int flag)
 
         if(pv_1.GetPointX() + LengthOfPacking <= pc_1.GetPointX())      //避免箱子放置过于深入
         {
-            //cout << pv_1.GetPointX() << "    " <<  pc_1.GetPointX() << "    ";
+            //// << pv_1.GetPointX() << "    " <<  pc_1.GetPointX() << "    ";
             int x_ = pc_2.GetPointX();
-            //cout << x_ - LengthOfPacking << "   ";
+            //// << x_ - LengthOfPacking << "   ";
             ite->Change(x_ - LengthOfPacking);
-            //cout << (ite->GetPoint1()).GetPointX() << endl;
+            //// << (ite->GetPoint1()).GetPointX() << endl;
         }
-
     }
+    */
 }
 
 template <typename T>
-T field_of(const json& object, const char* name) {
-	try {
-		return T(object.at(name));
-	} catch (const exception& err) {
-		throw runtime_error(string("getting `") + name + string("`: ") + err.what());
-	}
+T field_of(const json& object, const char* name)
+{
+    try
+    {
+        return T(object.at(name));
+    }
+    catch (const exception& err)
+    {
+        throw runtime_error(string("getting `") + name + string("`: ") + err.what());
+    }
 }
 
 void JSON(string read)
 {
-
     json input = json::parse(read);//输入json对象
 
 
     // string tradeId = field_of<string>(input, "tradeId"); //tradeId号
-	global_tradeId = field_of<string>(input, "tradeId"); //tradeId号
+    global_tradeId = field_of<string>(input, "tradeId"); //tradeId号
 
     json orderList = field_of<json>(input, "orderList");//订单列表
     json binList = field_of<json>(input, "vehicleModelList");//货箱列表
     int cargoid = 0;
 
-    //cout << orderList.size() << endl;
+    //// << orderList.size() << endl;
     for(int i=0; i<orderList.size(); i++) //遍历所有订单
     {
         json order = orderList[i];//当前订单
@@ -1869,11 +2006,11 @@ void JSON(string read)
         string orderCode = field_of<string>(order, "orderCode");//订单ID,string用来中转
 
         //int orderID = stoi(tempString);
-        //cout << orderID << endl;
+        //// << orderID << endl;
         int unloadingSequence = field_of<int>(order, "unloadingSequence");
 
         json boxList = field_of<json>(order,"goodList");//货物集合json对象
-        //cout << boxList.size() << endl;
+        //// << boxList.size() << endl;
 
 
         for(int j =0; j<boxList.size(); j++) //遍历当前订单的所有货物
@@ -1885,27 +2022,26 @@ void JSON(string read)
             //int qtynum = stoi(qty);
             string materialCode = field_of<string>(box,"materialCode");//订单ID,string用来中转
             int qtynum = field_of<int>(box, "qty");
-            //cout << qtynum << endl;
+            //// << qtynum << endl;
             qtynum--;
 
-            string idOfSet = field_of<string>(box,"setCode");//套机编码
-            //cout << idOfSet << endl;
+            //// << idOfSet << endl;
 
 
             //string tempLength;//得到长宽高和重量，string用来中转
             /*
             tempLength=box.at("length");
             int x = stoi(tempLength);
-            cout << x << endl;
+            // << x << endl;
             tempLength=box.at("width");
             int y = stoi(tempLength);
-            cout << y << endl;
+            // << y << endl;
             tempLength=box.at("height");
             int z = stoi(tempLength);
-            cout << z << endl;
+            // << z << endl;
             tempLength=box.at("weight");
             int weight = stoi(tempLength);
-            cout << weight << endl;
+            // << weight << endl;
             */
             int x = field_of<int>(box, "length");
             x = x / 10;
@@ -1918,11 +2054,21 @@ void JSON(string read)
             ca[cargoid] = new Cargo(x, y, z);
             ca[cargoid]->Setnum(0);
             ca[cargoid]->SetId(cargoid);
-            ca[cargoid]->ding = unloadingSequence;
+            ca[cargoid]->ding = 10000 - unloadingSequence;
             ca[cargoid]->weight = weight;
-            ca[cargoid]->materialcode = materialCode;
+            ca[cargoid]->materialCode = materialCode;
             ca[cargoid]->orderCode = orderCode;
-            //cout << ca[cargoid]->weight << endl;
+
+            string idOfSet = "";
+            if (box.contains("setCode") && !box["setCode"].is_null())
+            {
+                idOfSet = field_of<string>(box,"setCode");//套机编码
+                if (idOfSet != "")
+                {
+                    ca[cargoid]->set_code = idOfSet;
+                }
+            }
+            //// << ca[cargoid]->weight << endl;
 
             json boxLimit = field_of<json>(box, "restrictionList");//装箱限制json对象
             for(int k =0; k<boxLimit.size(); k++) //遍历所有限制
@@ -1930,6 +2076,10 @@ void JSON(string read)
                 json oriLimit = boxLimit[k];//当前限制规则
 
                 int orientation = stoi(field_of<string>(oriLimit, "flag"));//限制方向
+                // cerr << "input orientation = " << orientation << endl;
+                orientation = map_input_orientation(orientation);
+                // cerr << "map_input_orientation(orientation) = " << orientation << endl;
+
                 int direction = 0;
                 if(orientation == 1)
                     direction = 1;
@@ -1943,8 +2093,10 @@ void JSON(string read)
                     direction = 5;
                 else if(orientation == 6)
                     direction = 6;
-                //cout << orientation << endl;
-                //cout << "     " << direction << endl;
+
+                --direction;
+                //// << orientation << endl;
+                //// << "     " << direction << endl;
 
                 bool tempIsBearSurface = field_of<bool>(oriLimit,"isBear");//承重面限制
                 int isBearSurface=0;
@@ -1953,31 +2105,30 @@ void JSON(string read)
                 if(tempIsBearSurface==true)
                 {
                     isBearSurface=1;
-					bearLevel = field_of<int>(oriLimit, "bearLevel");
+                    bearLevel = field_of<int>(oriLimit, "bearLevel");
                 }
 
-                //cout << isBearSurface << endl;
-
-                //string tempBearLevel = oriLimit.at("bearLevel");//承重级别限制
-                //int bearLevel = stoi(tempBearLevel);
-
-                //cout << bearLevel << endl << endl;
-
-                //bool isStackLimit = oriLimit.at("isStack");//堆码限制
-                //int stackLevel = 0;//堆码层数
-                //int stackLevel = oriLimit.at("stackLevel");
 
                 ca[cargoid]->SetOri(direction, 0);
                 (ca[cargoid]->node[direction]).l = bearLevel;
                 (ca[cargoid]->node[direction]).y = isBearSurface;
                 (ca[cargoid]->node[direction]).f = 1;
+                ca[cargoid]->node[direction].isStack = field_of<bool>(oriLimit, "isStack");
+                if (!ca[cargoid]->node[direction].isStack)
+                {
+                    ca[cargoid]->node[direction].stackLevel = 100;
+                }
+                else
+                {
+                    ca[cargoid]->node[direction].stackLevel = field_of<int>(oriLimit, "stackLevel");
+                }
             }
             vecc.push_back(ca[cargoid]);
             cargoid++;
 
             while(qtynum)
             {
-                //cout << qtynum << endl;
+                //// << qtynum << endl;
                 ca[cargoid] = new Cargo(x, y, z);
                 ca[cargoid]->Setnum(0);
                 for(int j=0; j<6; j++)
@@ -1986,13 +2137,16 @@ void JSON(string read)
                     (ca[cargoid]->node[j]).l = (ca[cargoid-1]->node[j]).l;
                     (ca[cargoid]->node[j]).f = (ca[cargoid-1]->node[j]).f;
                     (ca[cargoid]->node[j]).y = (ca[cargoid-1]->node[j]).y;
+                    ca[cargoid]->node[j].isStack = ca[cargoid-1]->node[j].isStack;
+                    ca[cargoid]->node[j].stackLevel = ca[cargoid-1]->node[j].stackLevel;
                 }
                 ca[cargoid]->SetId(cargoid);
-                ca[cargoid]->ding = unloadingSequence;
+                ca[cargoid]->ding = 10000 - unloadingSequence;
                 ca[cargoid]->weight = weight;
-				ca[cargoid]->orderCode = orderCode;
+                ca[cargoid]->orderCode = orderCode;
+                ca[cargoid]->set_code = idOfSet;
 
-				ca[cargoid]->materialcode = materialCode;
+                ca[cargoid]->materialCode = materialCode;
 
                 vecc.push_back(ca[cargoid]);
                 cargoid++;
@@ -2074,37 +2228,47 @@ void JSON(string read)
         }
     }
     int nbin = binid;
-	for (int i = 0; i < nbin; i++)
-	{
-		for (int j = i + 1; j < nbin; j++)
-		{
-			if (bin[i]->GetHigh() < bin[j]->GetHigh())
-			{
-				Point p1 = bin[i]->GetPoint1();
-				Point p2 = bin[i]->GetPoint2();
-				string strpp = bin[i]->modelCode;
+    for (int i = 0; i < nbin; i++)
+    {
+        for (int j = i + 1; j < nbin; j++)
+        {
+            if (bin[i]->GetHigh() < bin[j]->GetHigh())
+            {
+                Point p1 = bin[i]->GetPoint1();
+                Point p2 = bin[i]->GetPoint2();
+                string strpp = bin[i]->modelCode;
 
-				bin[i]->SetPoint(bin[j]->GetPoint1(), bin[j]->GetPoint2());
-				bin[i]->modelCode = bin[j]->modelCode;
+                bin[i]->SetPoint(bin[j]->GetPoint1(), bin[j]->GetPoint2());
+                bin[i]->modelCode = bin[j]->modelCode;
 
-				bin[j]->SetPoint(p1, p2);
-				bin[j]->modelCode = strpp;
+                bin[j]->SetPoint(p1, p2);
+                bin[j]->modelCode = strpp;
 
-			}
-		}
-	}
-	for (int i = 0; i < nbin; i++)
-	{
-		bin[i]->SetNum(i);
-	}
+            }
+        }
+    }
+    for (int i = 0; i < nbin; i++)
+    {
+        bin[i]->SetNum(i);
+    }
+
+    //新加100个仓库
+    for(int i = 0; i<100; i++)
+    {
+        Point max_p1(0, 0, 0);
+        Point max_p2(1000, 1000, 1000);
+        bin[nbin] = new Bin(max_p1, max_p2);
+        bin[nbin]->SetNum(nbin);
+        bin[nbin]->modelCode = "storehouse";
+        nbin++;
+    }
+
 
     maxn = cargoid;
-    maxnbin = binid;
+    maxnbin = nbin;
 }
 
-
-
-char* binPackingAlgorithm(const char* str)
+string binPackingAlgorithm(const char* str)
 {
     Init();
     JSON(str);
@@ -2114,49 +2278,27 @@ char* binPackingAlgorithm(const char* str)
 
     string ans = another_ANS(vecc, valid);
 
-	char* reply = (char*)malloc(ans.size());
-	memcpy(reply, ans.data(), ans.size());
- // strcpy(reply, ans.c_str());
+    // char* reply = (char*)malloc(ans.size());
+    // memcpy(reply, ans.data(), ans.size());
+    // strcpy(reply, ans.c_str());
 
-	delete_vector(bin, maxnbin);
+    delete_vector(bin, maxnbin);
 
-	delete_vector(ca, maxn);
+    delete_vector(ca, maxn);
 
-	for (auto ptr : allocated_chrosomes)
-		delete ptr;
+    for (auto ptr : allocated_chrosomes)
+        delete ptr;
 
-	return reply;
+    // return reply;
+    return ans;
 }
-
-extern "C" JNIEXPORT jstring JNICALL Java_com_haier_tms_jni_NativeAlgorithm_binPackingAlgorithm
-  (JNIEnv * env, jclass cls, jstring str)
-{
-	const char *nativeString = env->GetStringUTFChars(str, 0);
-	char* reply =	binPackingAlgorithm(nativeString);
-
-	env->ReleaseStringUTFChars(str, nativeString);
-	jstring reply_jstring = env->NewStringUTF(reply);
-	free(reply);
-	return reply_jstring;
-}
-
-extern "C" JNIEXPORT void JNICALL Java_com_haier_tms_jni_NativeAlgorithm_hello
-(JNIEnv *, jclass)
-{
-	ofstream os("/root/hello_output.txt", std::ios_base::out);
-    os << "hello world from c world" << endl;
-
-}
-
 
 int main()
 {
     Init();
 
-	ostringstream os;
-	os << cin.rdbuf();
+    ostringstream os;
+    os << cin.rdbuf();
 
-	char* str = binPackingAlgorithm(os.str().c_str());
-	cerr << str << endl;
-	free(str);
+    cout << binPackingAlgorithm(os.str().c_str()) << endl;
 }

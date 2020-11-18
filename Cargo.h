@@ -4,6 +4,7 @@
 #include "Point.h"
 #include <string>
 #include <cstdint>
+#include <limits>
 
 //表示用于装箱的货物
 class Cargo
@@ -19,10 +20,12 @@ public:
         {
             node[i].f = 0;
             node[i].l = 0;
-            if(i == 0 || i == 2)
-                node[i].y = 1;
-            else
-                node[i].y = 0;
+            // if(i == 0 || i == 2)
+            //     node[i].y = 1;
+            // else
+			node[i].y = 0;
+			node[i].isStack = false;
+			node[i].stackLevel = 100;
         }
         numofpack = -1;
         yesk = 0;
@@ -123,13 +126,13 @@ public:
         int f;//方向
         int y;//称重面
         int l;//承重级别
+		bool isStack;	//堆码限制
+		int stackLevel;	//堆码层数
     };
     Node node[6];
     int ding;   //订单序列号
     int numofpack;  //被装集装箱号
     double weight; //表示箱子的重量
-
-
 
     int yesk;   //表示是否是套机
     char str[10];   //套机编码
@@ -137,11 +140,11 @@ public:
 
     int flag = 1;
 
-	string materialcode;
+	string materialCode;
     // long long orderCode;
 
     string orderCode;
-
+	string set_code;
 
 private:
     //箱子的长宽高
@@ -171,6 +174,9 @@ public:
         yes = 1;
         level = 0;      //承重级别为level
         weight = 300;
+
+		layer = 100;
+		max_weight = numeric_limits<double>::max();
     }
     ~EMSpace(){}
     //得到两个顶点坐标
@@ -201,8 +207,13 @@ public:
         p1 = pnew;
     }
     int level;  //表示这个空间可以放的称重级别
-    int weight; //表示这个空间箱子的重量
+    double weight; //表示这个空间箱子的重量
     int yes;    //是否是称重面
+
+	int layer;	//表示该空间最多堆码几层
+	double max_weight;	//表示该空间最大承重
+	string cargo_code;	//表示空间下面堆放货物的编码
+
 private:
     Point p1;
     Point p2;

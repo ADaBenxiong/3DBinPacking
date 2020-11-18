@@ -1,0 +1,41 @@
+{
+  "tradeId": "5234642672",
+  "orderList": [
+    {
+      "orderCode": "8200000852",
+      "unloadingSequence": 1,
+      "goodList": [
+        {
+          "materialCode": "BQ000D002",
+          "setCode": "",
+          "qty": 20,
+          "length": 300,
+          "width": 500,
+          "height": 600,
+          "weight": 30,
+          "restrictionList": [
+            {
+              "flag": "1",
+              "isBear": true,
+              "bearLevel": 1,
+              "isStack": false,
+              "stackLevel": 2
+            }
+          ],
+          "color": "#ec3c44"
+        }
+      ]
+    }
+  ],
+  "vehicleModelList": [
+    {
+      "modelCode": "40HQ",
+      "qty": 3,
+      "cubic": "20",
+      "weight": 30,
+      "length": 12030,
+      "width": 2350,
+      "height": 2380
+    }
+  ]
+}

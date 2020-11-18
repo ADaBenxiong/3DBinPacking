@@ -1,0 +1,71 @@
+
+1. 本版本为三维装箱系统11.18版，即为1.2版本
+2. 对于客户提出的六个问题（该版本已经解决1.货车车厢不足的情况，3.货物出现空缺的情况，2.货物出现阻挡并且货物订单乱序的情况），将要解决大量货物降低时间复杂度，快速出结果的问题
+3. 存在使用相同的输入进行多次测试后产生bug的情况
+{
+  "tradeId": "5689015493",
+  "orderList": [
+    {
+      "orderCode": "123456",
+      "unloadingSequence": 1,
+      "goodList": [
+        {
+          "materialCode": "s",
+          "qty": 20,
+          "length": 340,
+          "width": 300,
+          "height": 200,
+          "weight": 0,
+          "setCode": "a",
+          "restrictionList": [
+            {
+              "flag": "1",
+              "isBear": true,
+              "bearLevel": 1,
+              "isStack": true,
+              "stackLevel": 1
+            }
+          ],
+          "color": "#57f9df"
+        }
+      ]
+    },
+    {
+      "orderCode": "654321",
+      "unloadingSequence": 2,
+      "goodList": [
+        {
+          "materialCode": "a",
+          "qty": 20,
+          "length": 300,
+          "width": 500,
+          "height": 600,
+          "weight": 0,
+          "setCode": "a",
+          "restrictionList": [
+            {
+              "flag": "1",
+              "isBear": true,
+              "bearLevel": 99,
+              "isStack": false,
+              "stackLevel": 2
+            }
+          ],
+          "color": "#ec3c44"
+        }
+      ]
+    }
+  ],
+  "vehicleModelList": [
+    {
+      "modelCode": "b",
+      "qty": 26,
+      "cubic": 200,
+      "weight": 20,
+      "length": 5000,
+      "width": 1400,
+      "height": 1100
+    }
+  ]
+}
+4.将要解决大量货物时间复杂度降低，快速出结果的问题
